@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block body %}
+<section class="hero-home-new">
+
+    <div class="hero-home-text">
+
+        <p class="hero-prof">Prof. R. Musitano</p>
+
+        <h1>
+            Specialista in<br>
+            ginecologia ed<br>
+            ostetricia
+        </h1>
+
+        <div class="hero-line"></div>
+
+        <div class="hero-credentials">
+            <p>Extraordinary Professor of Reproductive Surgery</p>
+            <p>Referente Scientifico Nazionale Italia BioTexCom Kiev</p>
+            <p>Join Venture Centri PMA Genesy Palermo-Livorno</p>
+            <p class="credential-logo-line">Advisory Board Centri PMA <img src="{{ url_for('static', filename='img/logo_iirm.png') }}" alt="IIRM" class="iirm-logo-inline"> Lugano</p>
+            <p>Advisory Board Fertility GinePro Bologna</p>
+        </div>
+
+        <p class="hero-label">PREVENZIONE IN GINECOLOGIA</p>
+
+      <a href="/prenotazioni" class="hero-home-btn">
+    Prenota una visita
+    <span>→</span>
+</a>
+    </div>
+
+</section>   
+<section class="prevention-intro">
+
+    <div class="prevention-left">
+
+
+        <h2>
+            Prevenire è<br>
+            meglio che curare.
+        </h2>
+
+    </div>
+
+    <div class="prevention-right">
+
+        <p>
+            Eseguiamo uno Screening Combinato in un’unica seduta:
+            Visita Ginecologica e Senologica,
+            Ecografia Transvaginale,
+            Thin Prep Pap Test e Markers Ovarici.
+        </p>
+
+    </div>
+
+</section>
+<section class="story-grid premium-banners">
+  <article class="story-card large mortalita-card">
+<div class="story-image"><img src="{{ url_for('static', filename='img/locandina_sito_web.png') }}?v=20260701" class="locandina-fix" alt="Obiettivo mortalità zero screening combinato"></div>
+
+    <div class="story-text">
+     <span>Prevenzione avanzata</span>
+
+<h3 class="poster-title">
+    Obiettivo mortalità zero
+</h3>
+
+<p>Uno screening specialistico accurato, rapido e personalizzato, mirato alla diagnosi precoce della donna.
+Con tecnologie innovative, esperienza specialistica e prevenzione dedicata al servizio del benessere femminile.</p>
+           <div class="service-pills">
+        <a href="{{ url_for('servizio', slug='prevenzione') }}">Screening combinato</a>
+        <a href="{{ url_for('servizio', slug='thin-prep') }}">Thin Prep</a>
+        <a href="{{ url_for('servizio', slug='ecografia') }}">Ecografia</a>
+      </div>
+    </div>
+  </article>
+
+ <article class="story-card reverse-first">
+
+    <div class="story-text">
+        <span>Prevenzione</span>
+        <h3>Diagnosi precoce in ginecologica</h3>
+        <p>Controlli periodici, prevenzione oncologica, disturbi del ciclo e percorsi altamente personalizzati per la salute femminile.</p>
+
+        <div class="service-pills">
+            <a href="{{ url_for('servizio', slug='ginecologia') }}">Ginecologia</a>
+            <a href="{{ url_for('servizio', slug='prevenzione') }}">Prevenzione</a>
+            <a href="{{ url_for('servizio', slug='thin-prep') }}">Pap Test</a>
+        </div>
+    </div>
+
+    <div class="story-image">
+        <img src="{{ url_for('static', filename='img/banner_ginecologia.jpg') }}" alt="Ginecologia e prevenzione">
+    </div>
+
+</article>
+
+ 
+  <article class="story-card">
+    <div class="story-image"><img src="{{ url_for('static', filename='img/banner_fertilita.jpg') }}" alt="Fertilità di coppia"></div>
+    <div class="story-text">
+      <span>Fertilità&Sterilità</span>
+      <p>Valutazione specialistica della fertilità e dell’infertilità di coppia, con orientamento clinico per costruire il percorso più adatto al progetto genitoriale.</p>
+      <div class="service-pills"><a href="{{ url_for('servizio', slug='fertilita') }}">Fertilità</a><a href="{{ url_for('servizio', slug='ginecologia') }}">Ginecologia</a></div>
+    </div>
+  </article>
+</section>
+
+ {% endblock %}

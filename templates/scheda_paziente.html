@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block body %}
+
+<section class="admin">
+    <div class="panel">
+        <h1>{{ cliente.nome }}</h1>
+
+        <p><b>Email:</b> {{ cliente.email }}</p>
+        <p><b>Telefono:</b> {{ cliente.telefono }}</p>
+        <p><b>Note:</b> {{ cliente.note }}</p>
+
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:24px;">
+            <a class="btn" href="https://wa.me/{{ cliente.telefono|whatsapp_phone }}" target="_blank" rel="noopener">WhatsApp</a>
+            <a class="btn" href="tel:{{ cliente.telefono }}">Chiama</a>
+            <a class="btn" href="{{ cliente.email|gmail_compose('Contatto studio Prof. Musitano', '') }}" target="_blank" rel="noopener">Gmail</a>
+            <a class="btn ghost" href="{{ url_for('dashboard') }}">Torna admin</a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

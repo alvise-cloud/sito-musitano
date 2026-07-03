@@ -1,0 +1,19 @@
+{% extends 'base.html' %}{% block body %}
+<section class="login-wrap elite-login">
+  <div class="login-card elite-login-card">
+    <div class="login-orbit"><span>✦</span><span>+</span><span>○</span></div>
+    <div class="login-icon">M</div>
+    <p class="eyebrow">Area riservata</p>
+    <h1>Accesso Admin</h1>
+    <p class="muted">Inserisci nome utente e password dello studio.</p>
+    {% if errore %}<div class="error">{{ errore }}</div>{% endif %}
+    <form method="POST" class="stack">
+      <label class="pin-label">Nome utente</label>
+      <input type="text" name="username" autocomplete="username" placeholder="nome utente" required autofocus>
+      <label class="pin-label">Password</label>
+      <input type="password" name="password" autocomplete="current-password" placeholder="password" required>
+      <button class="full" type="submit">Entra nel pannello</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

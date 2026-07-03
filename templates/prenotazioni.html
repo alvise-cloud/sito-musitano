@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block body %}
+
+<section class="booking-luxury-page">
+
+    <div class="booking-copy">
+        <span>Prenota la tua visita</span>
+
+        <h1>
+            Richiedi una<br>
+            consulenza<br>
+            <em>specialistica</em>
+        </h1>
+
+        <p>
+            Compila il modulo per essere ricontattata dal Prof.R.Musitano
+            e dal suo team. Ogni richiesta è gestita con la massima
+            riservatezza e professionalità.
+        </p>
+
+        <div class="booking-benefits">
+            <div><b>✓</b><strong>Massima riservatezza</strong><small>I tuoi dati sono al sicuro con noi</small></div>
+            <div><b>♡</b><strong>Attenzione personalizzata</strong><small>Ogni paziente è unico</small></div>
+            <div><b>↗</b><strong>Risposta rapida</strong><small>Ti ricontatteremo al più presto</small></div>
+        </div>
+    </div>
+
+    <form method="POST" class="booking-luxury-form">
+
+        <div class="booking-fields">
+            <label>
+                Nome e cognome *
+                <input type="text" name="nome" placeholder="Inserisci il tuo nome e cognome" required>
+            </label>
+
+            <label>
+                Email *
+                <input type="email" name="email" placeholder="Inserisci la tua email" required>
+            </label>
+
+            <label>
+                Cellulare *
+                <input type="tel" name="telefono" placeholder="Inserisci il tuo numero di cellulare" required>
+            </label>
+
+            <label>
+                Indirizzo di residenza *
+                <input type="text" name="indirizzo" placeholder="Inserisci il tuo indirizzo di residenza" required>
+            </label>
+        </div>
+
+        <label class="full">
+            Motivo della visita *
+            <textarea name="messaggio" placeholder="Descrivi brevemente il motivo della tua richiesta" required></textarea>
+        </label>
+
+        <label class="booking-consent">
+            <input type="checkbox" required>
+            <span>Accetto il trattamento dei dati personali ai sensi del Regolamento UE 2016/679 (GDPR).</span>
+        </label>
+
+        <label class="booking-consent">
+            <input type="checkbox" required>
+            <span>Acconsento all’invio dei dati sanitari necessari alla gestione della richiesta di visita.</span>
+        </label>
+
+        <button type="submit">Invia richiesta →</button>
+
+        <small class="safe-note">I tuoi dati sono protetti e non verranno mai condivisi.</small>
+
+    </form>
+
+</section>
+
+{% endblock %}

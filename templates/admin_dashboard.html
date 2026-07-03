@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% block body %}
+
+<main class="admin admin-premium">
+
+<header class="admin-head">
+    <div>
+        <p class="eyebrow">Gestionale medico premium</p>
+        <h1>Dashboard Studio</h1>
+    </div>
+    <a class="btn ghost" href="{{ url_for('logout_admin') }}">Logout</a>
+</header>
+
+<section class="kpi">
+    <div><b>{{ prenotazioni|length }}</b><span>Prenotazioni</span></div>
+    <div><b>{{ clienti|length }}</b><span>Pazienti</span></div>
+    <div><b>{{ visite|length }}</b><span>Visite registrate</span></div>
+    <div><b>{{ prenotazioni|selectattr("stato","equalto","Confermata")|list|length }}</b><span>Confermate</span></div>
+</section>
+
+<section class="admin-grid">
+
+<div class="panel">
+    <div class="panel-title">
+        <h2>Prenotazioni</h2>
+        <a class="quick" href="{{ url_for('export_csv') }}">Esporta CSV</a>
+    </div>
+
+    {% for p in prenotazioni %}
+    <div class="booking-item" onclick="toggleBooking('{{ p.id }}')">
+
+        <div>
+            <b>{{ p.nome }}</b>
+            <span>{{ p.email }} · {{ p.telefono }}</span>
+        </div>
+
+        <div>
+            {% if p.stato == 'Confermata' %}
+                <em class="status ok">✓ Confermata</em>
+            {% elif p.stato == 'Completata' %}
+                <em class="status done">Completata</em>
+            {% elif p.stato == 'Annullata' %}
+                <em class="status cancel">Annullata</em>
+            {% else %}
+                <em class="status new">Nuova</em>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <div id="booking-{{ p.id }}" class="booking-detail-card" style="display:none;">
+
+        <h3>{{ p.nome }}</h3>
+
+        <p><b>Email:</b> {{ p.email }}</p>
+        <p><b>Telefono:</b> {{ p.telefono }}</p>
+        <p><b>Sede:</b> {{ p.sede or 'Non confermata' }}</p>
+        <p><b>Data:</b> {{ p.data or 'Da confermare' }}</p>
+        <p><b>Messaggio:</b> {{ p.messaggio }}</p>
+
+        {% if p.stato != 'Confermata' and p.stato != 'Completata' %}
+
+<form method="POST"
+      action="{{ url_for('conferma_prenotazione', id=p.id) }}"
+      class="confirm-box">
+
+    <select name="sede" required>
+        <option value="">Sede</option>
+        <option value="Caorle">Caorle</option>
+        <option value="Bova Marina">Bova Marina</option>
+        <option value="San Donà di Piave">San Donà di Piave</option>
+        <option value="Lugano">Lugano</option>
+        <option value="Venezia">Venezia</option>
+    </select>
+
+    <input type="date" name="data_visita" required>
+    <input type="time" name="ora_inizio" required>
+    <input type="time" name="ora_fine" required>
+
+    <button class="action confirm" type="submit">
+        ✓ Conferma
+    </button>
+
+</form>
+
+{% endif %}
+
+        {% set msg = "La tua prenotazione presso " ~ (p.sede or "lo studio") ~ " il " ~ (p.data or "") ~ " è stata confermata con successo." %}
+
+        <div class="admin-actions">
+            <a class="action whatsapp" href="https://wa.me/{{ p.telefono|whatsapp_phone }}?text={{ msg|urlencode }}" target="_blank" rel="noopener">WhatsApp</a>
+            <a class="action phone" href="tel:{{ p.telefono }}">Chiama</a>
+            <a class="action email" href="{{ p.email|gmail_compose('Prenotazione confermata', msg) }}" target="_blank" rel="noopener">Gmail</a>
+            {% if p.stato == 'Confermata' %}
+
+<a class="action complete"
+href="{{ url_for('completa_prenotazione', id=p.id) }}">
+    ✓ Completata
+</a>
+
+{% elif p.stato == 'Completata' %}
+
+<span class="action complete done-fixed">
+    ✓ Visita completata
+</span>
+
+{% endif %}
+            <a class="action cancel" href="{{ url_for('annulla_prenotazione', id=p.id) }}">Annulla</a>
+            <a class="action delete" href="{{ url_for('elimina', id=p.id) }}">Elimina</a>
+        </div>
+
+    </div>
+    {% endfor %}
+</div>
+
+<div class="panel" id="pazienti">
+    <div class="panel-title"><h2>Nuovo paziente</h2></div>
+
+    <form class="stack" method="POST" action="{{ url_for('nuovo_cliente') }}">
+        <input name="nome" placeholder="Nome e cognome" required>
+        <input name="telefono" placeholder="Telefono">
+        <input name="email" placeholder="Email">
+        <textarea name="note" placeholder="Note cliniche / amministrative"></textarea>
+        <button>Salva paziente</button>
+    </form>
+<div class="panel-title" style="margin-top:30px;">
+    <h2>Pazienti salvati</h2>
+</div>
+
+{% for c in clienti %}
+<div class="mini">
+    <div>
+        <b>{{ c.nome }}</b><br>
+        <span>{{ c.telefono }} · {{ c.email }}</span><br>
+        <small>{{ c.note }}</small>
+    </div>
+</div>
+{% endfor %}
+</div>
+
+</section>
+
+<section class="admin-grid">
+
+<div class="panel" id="visite">
+    <div class="panel-title"><h2>Registra visita</h2></div>
+
+    <form class="stack" method="POST" action="{{ url_for('nuova_visita') }}">
+        <input name="paziente" placeholder="Paziente">
+        <input type="datetime-local" name="data">
+        <input name="tipo" placeholder="Tipo visita">
+        <textarea name="note" placeholder="Esito, terapia, follow-up"></textarea>
+        <button>Registra visita</button>
+    </form>
+</div>
+
+<div class="panel">
+    <div class="panel-title"><h2>Storico visite</h2></div>
+
+    {% for v in visite %}
+    <div class="mini">
+        <b>{{ v.paziente }}</b>
+        <span>{{ v.data }} · {{ v.tipo }}</span>
+    </div>
+    {% endfor %}
+</div>
+
+</section>
+
+</main>
+
+<script>
+function toggleBooking(id){
+    const row = document.getElementById("booking-" + id);
+    row.style.display = row.style.display === "none" ? "block" : "none";
+}
+</script>
+
+{% endblock %}

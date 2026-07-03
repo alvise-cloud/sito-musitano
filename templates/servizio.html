@@ -1,0 +1,19 @@
+{% extends 'base.html' %}{% block body %}
+<section class="service-page">
+  <a class="back-link" href="{{ url_for('home') }}">← Torna alla home</a>
+  <div class="service-hero-card">
+    <p class="eyebrow">Approfondimento</p>
+    <h1>{{ servizio.titolo }}</h1>
+    <h2>{{ servizio.sottotitolo }}</h2>
+    <p>{{ servizio.testo }}</p>
+    <div class="definition-grid">
+      {% for punto in servizio.punti %}
+      <div><span>{{ loop.index }}</span><b>{{ punto }}</b></div>
+      {% endfor %}
+    </div>
+    <div class="hero-actions">
+      <a class="btn" href="{{ url_for('prenotazioni') }}">Prenota una visita</a>
+    </div>
+  </div>
+</section>
+{% endblock %}
