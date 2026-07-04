@@ -260,6 +260,43 @@ button{
     line-height:1.45;
 }
 
+.booking-consent a{
+    color:#c83d7b;
+    font-weight:900;
+    text-decoration:underline;
+    text-underline-offset:3px;
+}
+
+.booking-privacy-note,
+.booking-error{
+    margin-top:18px;
+    border:1px solid #f2c9d9;
+    border-radius:20px;
+    padding:18px 20px;
+    background:rgba(255,247,250,.92);
+    color:#6f5362;
+    font-family:"Times New Roman", serif;
+    line-height:1.55;
+}
+
+.booking-privacy-note strong{
+    display:block;
+    margin-bottom:6px;
+    color:#2f2430;
+    font-family:Georgia, "Times New Roman", serif;
+    font-size:18px;
+}
+
+.booking-privacy-note p{
+    margin:0;
+}
+
+.booking-error{
+    border-color:#e54893;
+    color:#9a1f52;
+    font-weight:800;
+}
+
 .booking-luxury-form button{
     width:100%;
     margin-top:26px;
@@ -3234,6 +3271,29 @@ background:transparent;
 .legal-page p{
     color:#7b6b77;
     line-height:1.7;
+}
+
+.legal-updated{
+    max-width:860px;
+    margin-top:-12px;
+    color:#9d3f68 !important;
+    font-weight:800;
+}
+
+.legal-list{
+    margin:0;
+    padding-left:22px;
+    color:#7b6b77;
+    line-height:1.7;
+}
+
+.legal-list li{
+    margin:8px 0;
+}
+
+.legal-warning{
+    border-color:#eaa7c2 !important;
+    background:linear-gradient(135deg,rgba(255,247,250,.96),rgba(255,255,255,.9)) !important;
 }
 
 /* === FOOTER + MORTALITA ZERO REQUESTED UPDATE === */
