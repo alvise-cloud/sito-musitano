@@ -7,3 +7,5 @@ services:
     envVars:
       - key: SESSION_COOKIE_SECURE
         value: "1"
+      - key: FLASK_DEBUG
+        value: "0"

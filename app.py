@@ -177,26 +177,12 @@ def servizio(slug):
 @app.route('/prenotazioni', methods=['GET','POST'])
 def prenotazioni():
     if request.method == 'POST':
-        if request.form.get('privacy_consent') != '1' or request.form.get('health_notice_consent') != '1':
-            slots = Slot.query.filter_by(disponibile=True).order_by(Slot.data, Slot.ora).all()
-            return render_template(
-                'prenotazioni.html',
-                slots=slots,
-                errore='Per inviare la richiesta e necessario accettare le informative obbligatorie.'
-            ), 400
-
-        indirizzo = (request.form.get('indirizzo') or '').strip()
-        messaggio = (request.form.get('messaggio') or '').strip()
-        messaggio_completo = messaggio
-        if indirizzo:
-            messaggio_completo = f"Indirizzo di residenza: {indirizzo}\n\nMotivo richiesta: {messaggio}"
-
         p = Prenotazione(
             nome=request.form.get('nome'),
             email=request.form.get('email'),
             telefono=request.form.get('telefono'),
             data=request.form.get('data'),
-            messaggio=messaggio_completo
+            messaggio=request.form.get('messaggio')
         )
 
         db.session.add(p)

@@ -1,8 +1,0 @@
-DirectoryIndex index.html index.php
-
-Redirect 302 /prenotazioni.html /prenotazioni.php
-Redirect 302 /admin /admin.php
-
-<FilesMatch "^(db)\.php$">
-  Require all denied
-</FilesMatch>
