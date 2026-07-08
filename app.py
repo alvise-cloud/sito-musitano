@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import csv, io, os
 from urllib.parse import quote
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__)
 
@@ -20,12 +21,18 @@ def load_local_env():
 
 load_local_env()
 
+database_url = os.environ.get('DATABASE_URL', 'sqlite:///musitano.db')
+if database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-only-change-before-publication')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///musitano.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE', '').lower() in ('1', 'true', 'yes')
+app.config['PREFERRED_URL_SCHEME'] = 'https' if app.config['SESSION_COOKIE_SECURE'] else 'http'
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
 
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
@@ -148,6 +155,10 @@ def seed():
         for d,o,t in [('2026-05-13','09:00','Screening combinato'),('2026-05-13','10:30','Ecografia transvaginale'),('2026-05-14','15:00','Colposcopia'),('2026-05-15','11:00','Prima visita')]:
             db.session.add(Slot(data=d, ora=o, tipo=t))
         db.session.commit()
+
+with app.app_context():
+    db.create_all()
+    seed()
 
 def admin_required():
     return session.get('admin') is True
@@ -375,11 +386,6 @@ def termini():
     return render_template('termini.html')
 
 if __name__ == '__main__':
-
-    with app.app_context():
-        db.create_all()
-        seed()
-
     app.run(
         host='0.0.0.0',
         port=5000,
