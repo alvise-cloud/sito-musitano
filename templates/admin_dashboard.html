@@ -151,6 +151,10 @@
         {% if c.indirizzo %}<span>{{ c.indirizzo }}</span><br>{% endif %}
         <small>{{ c.note }}</small>
     </div>
+    <form method="POST" action="{{ url_for('elimina_cliente', id=c.id) }}" class="inline-action-form danger-form">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+        <button class="action delete" type="button" data-confirm-title="Eliminare il paziente?" data-confirm-text="Il paziente verrà rimosso dall'elenco salvato. Le eventuali visite resteranno nello storico.">Elimina</button>
+    </form>
 </div>
 {% endfor %}
 </div>

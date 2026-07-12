@@ -342,6 +342,15 @@ def nuovo_cliente():
     c=Cliente(nome=request.form['nome'], email=request.form.get('email'), telefono=request.form.get('telefono'), indirizzo=request.form.get('indirizzo'), note=request.form.get('note'))
     db.session.add(c); db.session.commit(); return redirect(url_for('dashboard')+'#pazienti')
 
+@app.route('/cliente/elimina/<int:id>', methods=['POST'])
+def elimina_cliente(id):
+    if not admin_required(): return redirect(url_for('admin'))
+    c = Cliente.query.get_or_404(id)
+    Visita.query.filter_by(cliente_id=id).update({'cliente_id': None})
+    db.session.delete(c)
+    db.session.commit()
+    return redirect(url_for('dashboard')+'#pazienti')
+
 @app.route('/visita/nuova', methods=['POST'])
 def nuova_visita():
     if not admin_required(): return redirect(url_for('admin'))
