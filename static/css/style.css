@@ -4890,6 +4890,7 @@ background:transparent;
 }
 
 .whatsapp-message{
+    display:block !important;
     position:absolute !important;
     right:86px !important;
     bottom:12px !important;
@@ -5027,6 +5028,7 @@ background:transparent;
     }
 
     .whatsapp-message{
+        display:block !important;
         right:74px !important;
         bottom:8px !important;
         width:188px !important;
