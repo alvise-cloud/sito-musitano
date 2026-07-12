@@ -8,6 +8,7 @@
     <p class="muted">Inserisci nome utente e password dello studio.</p>
     {% if errore %}<div class="error">{{ errore }}</div>{% endif %}
     <form method="POST" class="stack">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
       <label class="pin-label">Nome utente</label>
       <input type="text" name="username" autocomplete="username" placeholder="nome utente" required autofocus>
       <label class="pin-label">Password</label>

@@ -54,15 +54,21 @@
 
         <p><b>Email:</b> {{ p.email }}</p>
         <p><b>Telefono:</b> {{ p.telefono }}</p>
+        <p><b>Indirizzo:</b> {{ p.indirizzo or 'Non indicato' }}</p>
         <p><b>Sede:</b> {{ p.sede or 'Non confermata' }}</p>
         <p><b>Data:</b> {{ p.data or 'Da confermare' }}</p>
         <p><b>Messaggio:</b> {{ p.messaggio }}</p>
+        <div class="consent-summary">
+            <span class="{{ 'ok' if p.consenso_privacy else 'missing' }}">Privacy: {{ 'accettata' if p.consenso_privacy else 'non registrata' }}</span>
+            <span class="{{ 'ok' if p.consenso_sanitario else 'missing' }}">Dati sanitari: {{ 'accettati' if p.consenso_sanitario else 'non registrati' }}</span>
+        </div>
 
         {% if p.stato != 'Confermata' and p.stato != 'Completata' %}
 
 <form method="POST"
       action="{{ url_for('conferma_prenotazione', id=p.id) }}"
       class="confirm-box">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
 
     <select name="sede" required>
         <option value="">Sede</option>
@@ -93,10 +99,12 @@
             <a class="action email" href="{{ p.email|gmail_compose('Prenotazione confermata', msg) }}" target="_blank" rel="noopener">Gmail</a>
             {% if p.stato == 'Confermata' %}
 
-<a class="action complete"
-href="{{ url_for('completa_prenotazione', id=p.id) }}">
+<form method="POST" action="{{ url_for('completa_prenotazione', id=p.id) }}" class="inline-action-form">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+    <button class="action complete" type="submit">
     ✓ Completata
-</a>
+    </button>
+</form>
 
 {% elif p.stato == 'Completata' %}
 
@@ -105,8 +113,14 @@ href="{{ url_for('completa_prenotazione', id=p.id) }}">
 </span>
 
 {% endif %}
-            <a class="action cancel" href="{{ url_for('annulla_prenotazione', id=p.id) }}">Annulla</a>
-            <a class="action delete" href="{{ url_for('elimina', id=p.id) }}">Elimina</a>
+            <form method="POST" action="{{ url_for('annulla_prenotazione', id=p.id) }}" class="inline-action-form danger-form">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                <button class="action cancel" type="button" data-confirm-title="Annullare la prenotazione?" data-confirm-text="La prenotazione resterà visibile ma verrà segnata come annullata.">Annulla</button>
+            </form>
+            <form method="POST" action="{{ url_for('elimina', id=p.id) }}" class="inline-action-form danger-form">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                <button class="action delete" type="button" data-confirm-title="Eliminare definitivamente?" data-confirm-text="Questa prenotazione verrà rimossa dall'admin e non potrà essere recuperata.">Elimina</button>
+            </form>
         </div>
 
     </div>
@@ -117,9 +131,11 @@ href="{{ url_for('completa_prenotazione', id=p.id) }}">
     <div class="panel-title"><h2>Nuovo paziente</h2></div>
 
     <form class="stack" method="POST" action="{{ url_for('nuovo_cliente') }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
         <input name="nome" placeholder="Nome e cognome" required>
         <input name="telefono" placeholder="Telefono">
         <input name="email" placeholder="Email">
+        <input name="indirizzo" placeholder="Indirizzo di residenza">
         <textarea name="note" placeholder="Note cliniche / amministrative"></textarea>
         <button>Salva paziente</button>
     </form>
@@ -132,6 +148,7 @@ href="{{ url_for('completa_prenotazione', id=p.id) }}">
     <div>
         <b>{{ c.nome }}</b><br>
         <span>{{ c.telefono }} · {{ c.email }}</span><br>
+        {% if c.indirizzo %}<span>{{ c.indirizzo }}</span><br>{% endif %}
         <small>{{ c.note }}</small>
     </div>
 </div>
@@ -146,6 +163,7 @@ href="{{ url_for('completa_prenotazione', id=p.id) }}">
     <div class="panel-title"><h2>Registra visita</h2></div>
 
     <form class="stack" method="POST" action="{{ url_for('nuova_visita') }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
         <input name="paziente" placeholder="Paziente">
         <input type="datetime-local" name="data">
         <input name="tipo" placeholder="Tipo visita">
@@ -169,11 +187,50 @@ href="{{ url_for('completa_prenotazione', id=p.id) }}">
 
 </main>
 
+<div class="admin-confirm-backdrop" id="adminConfirm" aria-hidden="true">
+    <div class="admin-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="adminConfirmTitle">
+        <span class="admin-confirm-icon">!</span>
+        <h2 id="adminConfirmTitle">Confermare azione?</h2>
+        <p id="adminConfirmText">Questa operazione richiede conferma.</p>
+        <div class="admin-confirm-actions">
+            <button type="button" class="btn ghost" id="adminConfirmCancel">Indietro</button>
+            <button type="button" class="btn danger-confirm" id="adminConfirmOk">Conferma</button>
+        </div>
+    </div>
+</div>
+
 <script>
 function toggleBooking(id){
     const row = document.getElementById("booking-" + id);
     row.style.display = row.style.display === "none" ? "block" : "none";
 }
+
+let pendingDangerForm = null;
+const confirmBox = document.getElementById("adminConfirm");
+const confirmTitle = document.getElementById("adminConfirmTitle");
+const confirmText = document.getElementById("adminConfirmText");
+
+document.querySelectorAll(".danger-form .action").forEach((button) => {
+    button.addEventListener("click", () => {
+        pendingDangerForm = button.closest("form");
+        confirmTitle.textContent = button.dataset.confirmTitle || "Confermare azione?";
+        confirmText.textContent = button.dataset.confirmText || "Questa operazione richiede conferma.";
+        confirmBox.classList.add("active");
+        confirmBox.setAttribute("aria-hidden", "false");
+    });
+});
+
+document.getElementById("adminConfirmCancel").addEventListener("click", () => {
+    pendingDangerForm = null;
+    confirmBox.classList.remove("active");
+    confirmBox.setAttribute("aria-hidden", "true");
+});
+
+document.getElementById("adminConfirmOk").addEventListener("click", () => {
+    if (pendingDangerForm) {
+        pendingDangerForm.submit();
+    }
+});
 </script>
 
 {% endblock %}

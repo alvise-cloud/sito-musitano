@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, Response
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, Response, abort
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import inspect, text
 from datetime import datetime
-import csv, io, os
+import csv, io, os, secrets
 from urllib.parse import quote
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -42,6 +43,16 @@ PRIMARY_DOMAIN = os.environ.get('PRIMARY_DOMAIN', 'profmusitanofertility.it')
 db = SQLAlchemy(app)
 
 @app.before_request
+def protect_post_requests():
+    if request.method != 'POST':
+        return None
+
+    expected = session.get('_csrf_token')
+    received = request.form.get('_csrf_token') or request.headers.get('X-CSRFToken')
+    if not expected or not received or not secrets.compare_digest(expected, received):
+        abort(400)
+
+@app.before_request
 def redirect_render_host_to_primary_domain():
     host = request.host.split(':', 1)[0].lower()
     if host.endswith('.onrender.com'):
@@ -66,9 +77,12 @@ class Prenotazione(db.Model):
     nome = db.Column(db.String(100))
     email = db.Column(db.String(150))
     telefono = db.Column(db.String(50))
+    indirizzo = db.Column(db.String(255))
     sede = db.Column(db.String(80))
     data = db.Column(db.String(50))
     messaggio = db.Column(db.Text)
+    consenso_privacy = db.Column(db.Boolean, default=False)
+    consenso_sanitario = db.Column(db.Boolean, default=False)
     stato = db.Column(db.String(30), default='Nuova')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -85,6 +99,7 @@ class Cliente(db.Model):
     nome = db.Column(db.String(120))
     email = db.Column(db.String(150))
     telefono = db.Column(db.String(50))
+    indirizzo = db.Column(db.String(255))
     note = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -139,7 +154,35 @@ SERVIZI = {
 
 @app.context_processor
 def inject_globals():
-    return {'telegram_link': os.environ.get('TELEGRAM_BOT_LINK', 'https://t.me/INSERISCI_USERNAME_BOT')}
+    if '_csrf_token' not in session:
+        session['_csrf_token'] = secrets.token_urlsafe(32)
+    return {
+        'telegram_link': os.environ.get('TELEGRAM_BOT_LINK', 'https://t.me/INSERISCI_USERNAME_BOT'),
+        'csrf_token': session['_csrf_token']
+    }
+
+def ensure_schema():
+    inspector = inspect(db.engine)
+    dialect = db.engine.dialect.name
+    bool_type = 'INTEGER DEFAULT 0' if dialect == 'sqlite' else 'BOOLEAN DEFAULT false'
+
+    required_columns = {
+        'prenotazione': {
+            'indirizzo': 'VARCHAR(255)',
+            'consenso_privacy': bool_type,
+            'consenso_sanitario': bool_type
+        },
+        'cliente': {
+            'indirizzo': 'VARCHAR(255)'
+        }
+    }
+
+    for table_name, columns in required_columns.items():
+        existing = {column['name'] for column in inspector.get_columns(table_name)}
+        for column_name, column_type in columns.items():
+            if column_name not in existing:
+                db.session.execute(text(f'ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}'))
+    db.session.commit()
 
 @app.template_filter('whatsapp_phone')
 def whatsapp_phone(value):
@@ -171,6 +214,7 @@ def seed():
 
 with app.app_context():
     db.create_all()
+    ensure_schema()
     seed()
 
 def admin_required():
@@ -194,8 +238,11 @@ def prenotazioni():
             nome=request.form.get('nome'),
             email=request.form.get('email'),
             telefono=request.form.get('telefono'),
+            indirizzo=request.form.get('indirizzo'),
             data=request.form.get('data'),
-            messaggio=request.form.get('messaggio')
+            messaggio=request.form.get('messaggio'),
+            consenso_privacy=bool(request.form.get('consenso_privacy')),
+            consenso_sanitario=bool(request.form.get('consenso_sanitario'))
         )
 
         db.session.add(p)
@@ -208,12 +255,14 @@ def prenotazioni():
             cliente.nome = p.nome or cliente.nome
             cliente.email = p.email or cliente.email
             cliente.telefono = p.telefono or cliente.telefono
+            cliente.indirizzo = p.indirizzo or cliente.indirizzo
             cliente.note = p.messaggio or cliente.note
         else:
             cliente = Cliente(
                 nome=p.nome,
                 email=p.email,
                 telefono=p.telefono,
+                indirizzo=p.indirizzo,
                 note=p.messaggio
             )
             db.session.add(cliente)
@@ -282,7 +331,7 @@ def elimina_slot(id):
     if not admin_required(): return redirect(url_for('admin'))
     s=Slot.query.get_or_404(id); db.session.delete(s); db.session.commit(); return redirect(url_for('dashboard')+'#agenda')
 
-@app.route('/elimina/<int:id>')
+@app.route('/elimina/<int:id>', methods=['POST'])
 def elimina(id):
     if not admin_required(): return redirect(url_for('admin'))
     p=Prenotazione.query.get_or_404(id); db.session.delete(p); db.session.commit(); return redirect(url_for('dashboard'))
@@ -290,7 +339,7 @@ def elimina(id):
 @app.route('/cliente/nuovo', methods=['POST'])
 def nuovo_cliente():
     if not admin_required(): return redirect(url_for('admin'))
-    c=Cliente(nome=request.form['nome'], email=request.form.get('email'), telefono=request.form.get('telefono'), note=request.form.get('note'))
+    c=Cliente(nome=request.form['nome'], email=request.form.get('email'), telefono=request.form.get('telefono'), indirizzo=request.form.get('indirizzo'), note=request.form.get('note'))
     db.session.add(c); db.session.commit(); return redirect(url_for('dashboard')+'#pazienti')
 
 @app.route('/visita/nuova', methods=['POST'])
@@ -351,7 +400,7 @@ def conferma_prenotazione(id):
     return redirect(url_for('dashboard'))
 
 
-@app.route('/completa_prenotazione/<int:id>')
+@app.route('/completa_prenotazione/<int:id>', methods=['POST'])
 def completa_prenotazione(id):
     if not admin_required():
         return redirect(url_for('admin'))
@@ -361,7 +410,7 @@ def completa_prenotazione(id):
     db.session.commit()
 
     return redirect(url_for('dashboard'))
-@app.route('/annulla_prenotazione/<int:id>')
+@app.route('/annulla_prenotazione/<int:id>', methods=['POST'])
 def annulla_prenotazione(id):
     if not admin_required():
         return redirect(url_for('admin'))

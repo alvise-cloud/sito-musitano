@@ -26,6 +26,7 @@
     </div>
 
     <form method="POST" class="booking-luxury-form">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
 
         <div class="booking-fields">
             <label>
@@ -55,12 +56,12 @@
         </label>
 
         <label class="booking-consent">
-            <input type="checkbox" required>
+            <input type="checkbox" name="consenso_privacy" value="1" required>
             <span>Accetto il trattamento dei dati personali ai sensi del Regolamento UE 2016/679 (GDPR).</span>
         </label>
 
         <label class="booking-consent">
-            <input type="checkbox" required>
+            <input type="checkbox" name="consenso_sanitario" value="1" required>
             <span>Acconsento all’invio dei dati sanitari necessari alla gestione della richiesta di visita.</span>
         </label>
 
