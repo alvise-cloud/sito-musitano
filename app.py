@@ -36,7 +36,18 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
 
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
+PRIMARY_DOMAIN = os.environ.get('PRIMARY_DOMAIN', 'profmusitanofertility.it')
 db = SQLAlchemy(app)
+
+@app.before_request
+def redirect_render_host_to_primary_domain():
+    host = request.host.split(':', 1)[0].lower()
+    if host.endswith('.onrender.com'):
+        query = request.query_string.decode('utf-8')
+        target = f"https://{PRIMARY_DOMAIN}{request.path}"
+        if query:
+            target = f"{target}?{query}"
+        return redirect(target, code=301)
 
 @app.after_request
 def add_security_headers(response):
