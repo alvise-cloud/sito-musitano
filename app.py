@@ -442,6 +442,52 @@ def cookie_policy():
 def termini():
     return render_template('termini.html')
 
+@app.route('/robots.txt')
+def robots_txt():
+    content = f"""User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /paziente/
+Disallow: /export/
+Disallow: /api/
+
+Sitemap: https://{PRIMARY_DOMAIN}/sitemap.xml
+"""
+    return Response(content, mimetype='text/plain')
+
+@app.route('/sitemap.xml')
+def sitemap_xml():
+    today = datetime.utcnow().strftime('%Y-%m-%d')
+    public_paths = [
+        '/',
+        '/prenotazioni',
+        '/servizi/ginecologia',
+        '/servizi/ostetricia',
+        '/servizi/fertilita',
+        '/servizi/thin-prep',
+        '/servizi/ecografia',
+        '/servizi/prevenzione',
+        '/privacy',
+        '/cookie-policy',
+        '/termini',
+    ]
+    urls = '\n'.join(
+        f"""  <url>
+    <loc>https://{PRIMARY_DOMAIN}{path}</loc>
+    <lastmod>{today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>{'1.0' if path == '/' else '0.8'}</priority>
+  </url>"""
+        for path in public_paths
+    )
+    content = f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{urls}
+</urlset>
+"""
+    return Response(content, mimetype='application/xml')
+
 if __name__ == '__main__':
     app.run(
         host='0.0.0.0',
